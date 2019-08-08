@@ -329,11 +329,20 @@
 // When using VC, turn off browser references
 // Turn off unavoidable compiler warnings
 
-#if defined(_MSC_VER) && (_MSC_VER > 1100)
+#ifdef _MSC_VER //!!
+  //!! Mute MSVC's warning about vsnprintf being unsafe
+  //!! NOTE: This likely won't make a difference if Windows.h has already been included!
+  //!! OTOH, CStdString doesn't compile if Windows.h is *not* included first...
+  #ifndef _CRT_SECURE_NO_WARNINGS
+  #define _CRT_SECURE_NO_WARNINGS
+  #endif
+
+  #if _MSC_VER > 1100 //!!
 	#pragma component(browser, off, references, "CStdString")
 	#pragma warning (disable : 4290) // C++ Exception Specification ignored
 	#pragma warning (disable : 4127) // Conditional expression is constant
 	#pragma warning (disable : 4097) // typedef name used as synonym for class name
+  #endif
 #endif
 
 // Borland warnings to turn off
@@ -438,20 +447,25 @@
 
 //#define SS_NO_REFCOUNT
 
-// MACRO: SS_WIN32
-// ---------------
+//!!Added NO_SS_WIN32, MinGW support
+// MACRO: SS_WIN32 (and NO_SS_WIN32)
+// ---------------------------------
 //      When this flag is set, we are building code for the Win32 platform and
 //      may use Win32 specific functions (such as LoadString).  This gives us
 //      a couple of nice extras for the code.
 //
 //      Obviously, Microsoft's is not the only compiler available for Win32 out
 //      there.  So I can't just check to see if _MSC_VER is defined to detect
-//      if I'm building on Win32.  So for now, if you use MS Visual C++ or
-//      Borland's compiler, I turn this on.  Otherwise you may turn it on
-//      yourself, if you prefer
+//      if I'm building on Win32.  So for now, if you use MS Visual C++, Borland
+//      or a MinGWs compiler, we turn this on.  Otherwise you may turn it on
+//      yourself, if you prefer.
 
-#if defined(_MSC_VER) || defined(__BORLANDC__) || defined(_WIN32)
-    #define SS_WIN32
+#ifndef SS_WIN32
+  #ifndef MO_SS_WIN32
+    #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(_WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
+      #define SS_WIN32
+    #endif
+  #endif
 #endif
 
 // MACRO: SS_ANSI
@@ -470,6 +484,14 @@
     #endif
 #endif
 
+//!!Check added
+#ifndef SS_WIN32
+    #ifdef SS_NO_ANSI
+        #error Do not define 'NO_SS_ANSI' on a non-Win32 system, or together with MO_SS_WIN32.
+    #endif
+#endif
+
+//!! _alloca removed, this is NOOP now.
 // MACRO: SS_ALLOCA
 // ----------------
 //      Some implementations of the Standard C Library have a non-standard
@@ -578,7 +600,7 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 
 	#ifdef SS_ANSI
 
-		// On Win32 we have TCHAR.H so just include it.  This is NOT violating
+        // On Win32 we have TCHAR.H so just include it.  This is NOT violating
         // the spirit of SS_ANSI as we are not calling any Win32 functions here.
         
 		#ifdef SS_WIN32
@@ -614,7 +636,8 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 			#define ASSERT(f) assert((f))
 		#endif
 		#ifndef VERIFY
-			#ifdef _DEBUG
+//!!			#ifdef _DEBUG
+			#ifndef NDEBUG
 				#define VERIFY(x) ASSERT((x))
 			#else
 				#define VERIFY(x) x
@@ -632,11 +655,18 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 		// Make sure ASSERT and verify are defined
 
 		#ifndef ASSERT
+		    #ifdef _MSC_VER
 			#include <crtdbg.h>
 			#define ASSERT(f) _ASSERTE((f))
+		    #else
+			#include <assert.h>
+			#define ASSERT(f) assert((f))
+		    #endif
 		#endif
+
 		#ifndef VERIFY
-			#ifdef _DEBUG
+//!!			#ifdef _DEBUG
+			#ifndef NDEBUG
 				#define VERIFY(x) ASSERT((x))
 			#else
 				#define VERIFY(x) x
@@ -791,10 +821,11 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 	#include <varargs.h>
 #endif
 
-
 #ifdef SS_NO_LOCALE
 
-	#if defined(_WIN32) || defined (_WIN32_WCE)
+	//!! The MinGW/MSYS options were missing here. And actually, MSYS is kinda incorrect (as
+	//!! it may not necessarily invoke any Win32 stuff), but it made the gcc build test succeed...
+	#if defined(_WIN32) || defined (_WIN32_WCE) || defined (__MINGW32__) || defined (__MINGW64__) || defined (__MSYS__)
 
 		inline PWSTR StdCodeCvt(PWSTR pDstW, int nDst, PCSTR pSrcA, int nSrc, 
 			UINT acp=CP_ACP)
@@ -855,7 +886,7 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 			PWSTR pNextDstW			= pDstW;
 			SSCodeCvt::result res	= SSCodeCvt::ok;
 			const SSCodeCvt& conv	= SS_USE_FACET(loc, SSCodeCvt);
-			SSCodeCvt::state_type st= { 0 };
+			SSCodeCvt::state_type st= { 0, 0 }; //!! added second 0 for gcc 9.1 -Wextra
 			res						= conv.in(st,
 										pSrcA, pSrcA + nSrc, pNextSrcA,
 										pDstW, pDstW + nDst, pNextDstW);
@@ -894,7 +925,7 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 			PCWSTR pNextSrcW		= pSrcW;
 			SSCodeCvt::result res	= SSCodeCvt::ok;
 			const SSCodeCvt& conv	= SS_USE_FACET(loc, SSCodeCvt);
-			SSCodeCvt::state_type st= { 0 };
+			SSCodeCvt::state_type st= { 0, 0 }; //!! added second 0 for gcc 9.1 -Wextra
 			res						= conv.out(st,
 										pSrcW, pSrcW + nSrc, pNextSrcW,
 										pDstA, pDstA + nDst, pNextDstA);
@@ -931,7 +962,7 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
     
 #if defined(SS_ALLOCA) && !defined SS_NO_CONVERSION
 
-    #include <malloc.h>	// needed for _alloca
+    #include <malloc.h>	//!! used to be needed for _alloca, but now for malloc, allowing gcc 9.1 compile, too
 
     // Define our conversion macros to look exactly like Microsoft's to
     // facilitate using this stuff both with and without MFC/ATL
@@ -1329,7 +1360,7 @@ inline void	ssasn(std::string& sDst, PCWSTR pW)
 	int nSrc	= sslen(pW);
 	if ( nSrc > 0 )
 	{
-		int nSrc	= sslen(pW);
+//!!		int nSrc	= sslen(pW);
 		int nDst	= nSrc;
 
 		// In MBCS builds, pad the buffer to account for the possibility of
@@ -1608,23 +1639,35 @@ inline int sscmp(const CT* pA1, const CT* pA2)
     return (int)(f - l);
 }
 
+
 // -----------------------------------------------------------------------------
 // ssicmp: comparison (case INsensitive, not affected by locale)
 // -----------------------------------------------------------------------------
 template<typename CT>
 inline int ssicmp(const CT* pA1, const CT* pA2)
 {
-	// Using the "C" locale = "not affected by locale"
-
-	std::locale loc = std::locale::classic();
-    const std::ctype<CT>& ct = SS_USE_FACET(loc, std::ctype<CT>);
     CT f;
     CT l;
+
+//!!The need for this conditional guard was revealed by a gcc build.
+#ifndef SS_NO_LOCALE
+	// Using the "C" locale = "not affected by locale"
+
+    std::locale loc = std::locale::classic();
+    const std::ctype<CT>& ct = SS_USE_FACET(loc, std::ctype<CT>);
 
     do 
     {
 	    f = ct.tolower(*(pA1++));
 	    l = ct.tolower(*(pA2++));
+#else
+
+    do
+    {
+	    f = sstolower(*(pA1++));
+	    l = sstolower(*(pA2++));
+#endif
+
     } while ( (f) && (f == l) );
 
     return (int)(f - l);
@@ -1633,7 +1676,6 @@ inline int ssicmp(const CT* pA1, const CT* pA2)
 // -----------------------------------------------------------------------------
 // ssupr/sslwr: Uppercase/Lowercase conversion functions
 // -----------------------------------------------------------------------------
-
 template<typename CT>
 inline void sslwr(CT* pT, size_t nLen, const std::locale& loc=std::locale())
 {
@@ -1990,7 +2032,7 @@ inline int sscpy(CT1* pDst, const std::basic_string<CT2>& sSrc)
 
 #ifdef SS_NO_LOCALE
 	template<typename CT>
-	struct SSToUpper : public std::unary_function<CT, CT>
+	struct SSToUpper //!!: public std::unary_function<CT, CT>
 	{
 		inline CT operator()(const CT& t) const
 		{
@@ -1998,7 +2040,7 @@ inline int sscpy(CT1* pDst, const std::basic_string<CT2>& sSrc)
 		}
 	};
 	template<typename CT>
-	struct SSToLower : public std::unary_function<CT, CT>
+	struct SSToLower //!!: public std::unary_function<CT, CT>
 	{
 		inline CT operator()(const CT& t) const
 		{
@@ -2094,6 +2136,12 @@ private:
     FmtArg& operator=(const FmtArg&) { return *this; }
 };
 
+//!! Must forward-declare this (for gcc 9 only?)
+#ifdef SS_WIN32
+inline HMODULE& SSResourceHandle(); //!! gcc error: there are no arguments to 'SSResourceHandle' that depend on a template parameter,
+                                    //!! so a declaration of 'SSResourceHandle' must be available [-fpermissive]
+#endif
+
 template<typename CT>
 class CStdStr : public std::basic_string<CT>
 {
@@ -2108,8 +2156,8 @@ class CStdStr : public std::basic_string<CT>
 	typedef typename MYBASE::iterator			MYITER;  // my iterator type
 	typedef typename MYBASE::const_iterator		MYCITER; // you get the idea...
 	typedef typename MYBASE::reverse_iterator	MYRITER;
-	typedef typename MYBASE::size_type			MYSIZE;   
-	typedef typename MYBASE::value_type			MYVAL; 
+	typedef typename MYBASE::size_type			MYSIZE;
+	typedef typename MYBASE::value_type			MYVAL;
 	typedef typename MYBASE::allocator_type		MYALLOC;
 	
 public:
@@ -2461,6 +2509,7 @@ public:
 					   this->begin(),
 #ifdef SS_NO_LOCALE
 					   SSToLower<CT>());
+				           loc; //!! Mute "unused" warnings...
 #else
 //!!					   std::bind2nd(SSToLower<CT>(), loc));
 					   [&loc](auto c) -> CT { return SSToLower<CT>()(c, loc); } ); //!! () to help out handicapped compilers
@@ -3180,7 +3229,8 @@ public:
 		CT* pBuf			= NULL;
 		int nChars			= 1;
 		int nUsed			= 0;
-		size_type nActual	= 0;
+//!!		size_type nActual		= 0;
+		MYSIZE nActual			= 0;
 		int nTry			= 0;
 
 		do	
@@ -3188,7 +3238,10 @@ public:
 			// Grow more than linearly (e.g. 512, 1536, 3072, etc)
 
 			nChars			+= ((nTry+1) * FMT_BLOCK_SIZE);
-			pBuf			= reinterpret_cast<CT*>(_alloca(sizeof(CT)*nChars));
+//!!alloca is unavailable/problematic in many environments:
+//!!			pBuf			= reinterpret_cast<CT*>(_alloca(sizeof(CT)*nChars));
+			pBuf			= reinterpret_cast<CT*>(malloc(sizeof(CT)*nChars));
+			if (!pBuf) throw(std::bad_alloc());
 			nUsed			= ssvsprintf(pBuf, nChars-1, szFormat, argList);
 
 			// Ensure proper NULL termination.
@@ -3202,6 +3255,7 @@ public:
 		// assign whatever we managed to format
 
 		this->assign(pBuf, nActual);
+		free(pBuf);
 
 	#endif
 	}
@@ -3297,7 +3351,7 @@ public:
 	}
 
 #ifndef SS_ANSI
-	void FormatMessage(PCMYSTR szFormat, ...) throw(std::exception)
+	void FormatMessage(PCMYSTR szFormat, ...) //!! throw(std::exception)
 	{
 		va_list argList;
 		va_start(argList, szFormat);
@@ -3314,7 +3368,7 @@ public:
 		va_end(argList);
 	}
 
-	void FormatMessage(UINT nFormatId, ...) throw(std::exception)
+	void FormatMessage(UINT nFormatId, ...) //!! throw(std::exception)
 	{
 		MYTYPE sFormat;
 		VERIFY(sFormat.LoadString(nFormatId));
@@ -3596,7 +3650,7 @@ public:
 
 	void AnsiToOem()
 	{
-		if ( sizeof(CT) == sizeof(char) && !empty() )
+		if ( sizeof(CT) == sizeof(char) && !this->empty() ) //!! this-> was missing, causing gcc error "...declaration of 'empty' must be available [-fpermissive]"
 		{
 			::CharToOem(reinterpret_cast<PCSTR>(this->c_str()),
 						reinterpret_cast<PSTR>(GetBuf()));
@@ -3609,7 +3663,7 @@ public:
 
 	void OemToAnsi()
 	{
-		if ( sizeof(CT) == sizeof(char) && !empty() )
+		if ( sizeof(CT) == sizeof(char) && !this->empty() ) //!! this-> was missing, causing gcc error "...declaration of 'empty' must be available [-fpermissive]"
 		{
 			::OemToChar(reinterpret_cast<PCSTR>(this->c_str()),
 						reinterpret_cast<PSTR>(GetBuf()));

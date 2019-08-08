@@ -1,5 +1,5 @@
 # CStdString
-Joe O'Leary's excellent (and >20-year-old...) drop-in replacement for MFC's CString, facelifted for contemporary C++.
+Joe O'Leary's excellent (20-year-old...) drop-in replacement for MFC's CString, facelifted for contemporary C++.
 
 ## USAGE:
 
@@ -10,26 +10,47 @@ Just copy `CStdString.h` to a suitable place in your project, and:
 
 ## NOTE:
 
+* Based on std::basic_string.
+
 * The `original` folder is just the unpacked zip files published in Joe's 2011 [CodeProject article](https://www.codeproject.com/Articles/1146/CString-clone-Using-Standard-C)
-(see below), added for easier browsing. It doesn't compile any more with recent compilers. (That's the reason of this facelifting project.)
+  (see below), added for easier browsing. It no longer compiles with any recent compiler.
+  (That's the reason of this facelifting project.)
 
 * The updated version of the original `stdstring.h` is renamed to `CStdString.h` here.
 
-* It has been test-compiled (building Joe's original test app) with MSVC 16.1 (Visual Studio 2019),
-  both with and without `UNICODE` (and `_UNICODE`), and both for `c++14` and `c++17` (and `c++latest`,
-  which is just `c++17` now, I guess).
+* It has been test-compiled (building Joe's original simple test app) with MSVC 16.1 (Visual Studio 2019),
+  both with and without `UNICODE` (and `_UNICODE`), both for `c++14` and `c++17`, even `c++latest`
+  (c++20 preview), with/without debug, and with/wo. SS_NO_LOCALE. Compiles cleanly with `-W4`.
+
+* GCC support has also been restored: my 9.1.0 (MSYS2) compiles cleanly with `-Wall -pedantic -Wextra`
+  in all the same cases as MSVC. (No other GCC setup was tested yet!)
 
 * It has been successfully integrated into [my fork of Notepad++](https://github.com/lunakid/notepad-plusplus-gilded),
-  replacing the original `CString` class there.
+  replacing the original `CString` class there. (Builds fine, but not explicitly tested for
+  actually correct functionality!)
 
-* GCC support has not been restored yet. (Tried, and failed, with MSYS2's 9.1. See `test/gcc-errors.log`.`)
+* **WARNING:** NO OTHER TESTS have been performed, so there may very well be unfixed deprecations,
+  subtle (or gross...) inconsistencies, and even brand new, exciting & adventurous regressions.
 
-* **WARNING:** NO OTHER TESTS have been performed, so there may very well be more unfixed deprecations left,
-  or even new, exciting regressions, too. (Fixes: on-demand. Note: this is pretty much obsolete legacy code,
-  kept alive only for replacing even more obsolete legacy code, and its primarily purpose is to aid
-  transition/migration *away from* old code-bases, to things that no longer need the CString class.)
+  - Indeed, I've actually spent a full day chasing a segfault with GCC, when forcing the `SS_WIN32`
+    cfg. define on it. (The issue still remains, but can be easily avoided: just let `CStdString.h`
+    define it as it sees fit.)
 
-* The links to Joe's old sites in the original header and the article are dead.
+  - Also, there's a locale/codecvt-related assertion failure I saw (in the `StdCodeCvt` functions,
+    due to `conv.in()` failing), which I haven't investigated.
+
+  Fixes may come on-demand, but note: this is pretty much obsolete legacy code, kept alive only for
+  replacing even more obsolete legacy code, and its primarily purpose is to aid transition/migration
+  *away from* old code-bases to things that no longer need the CString class.
+
+* The links to Joe's old sites in the original header and the article are dead, so the unit tests
+  he seems to refer to occasionally, could not be recovered. (Could find his site at the Wayback
+  Machine (see link near EOF!), but, alas, the tests were nowhere to be found.)
+
+* He did have *yet another* `CString` replacement (`CW32String`), though, which is completely standalone,
+  doesn't need anything from the C runtime, just the Win32 API. Wayback Machine link to the old
+  Projects page: http://web.archive.org/web/20060203010951/http://home.earthlink.net/~jmoleary/projects.htm.
+  
 
 ### A copy of Joe's CodeProject article:
 
@@ -109,4 +130,5 @@ I've been a software developer since 1990.
 While my main page is out of date (and I have therefore blanked it),
 you can read about the CStdString pages here
 
-http://home.earthlink.net/~jmoleary/stdstring.htm *[DEAD LINK!]*
+http://home.earthlink.net/~jmoleary/stdstring.htm [<-- *DEAD LINK!* But the Internet Archive has
+snapshots; this looks like the latest version: http://web.archive.org/web/20060207090333/http://home.earthlink.net/~jmoleary/stdstring.htm]

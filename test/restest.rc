@@ -1,5 +1,7 @@
 //Microsoft Developer Studio generated resource script.
 //
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h> //!!https://mattshaw.org/news/fix-for-error-rc2144-primary-language-id-not-a-number/
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -7,7 +9,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+//!!#include "afxres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -32,13 +34,13 @@ BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "#include ""afxres.h""\r\n"
-    "\0"
-END
+//!!2 TEXTINCLUDE DISCARDABLE 
+//!!BEGIN
+//!!    "#include ""afxres.h""\r\n"
+//!!    "\0"
+//!!END
 
-3 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "\r\n"
     "\0"
@@ -72,4 +74,3 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
-

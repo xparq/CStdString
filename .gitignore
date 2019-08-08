@@ -1,17 +1,18 @@
 # Prerequisites
 *.d
 
-# Compiled Object files
+# Compiled object and resource files
 *.slo
 *.lo
 *.o
 *.obj
+*.res
 
-# Precompiled Headers
+# Precompiled headers
 *.gch
 *.pch
 
-# Compiled Dynamic libraries
+# Compiled dynamic libraries
 *.so
 *.dylib
 *.dll
@@ -31,4 +32,6 @@
 *.out
 *.app
 
+# Misc. junk:
 tmp/
+a.exe.stackdump
