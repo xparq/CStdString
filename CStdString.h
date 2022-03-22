@@ -3911,7 +3911,7 @@ public:
 		{
 			TRACE(_T("StreamSave: Cannot write control header, ERR=0x%X\n"),hr);
 		}
-		else if ( empty() )
+		else if ( this->empty() )
 		{
 			;		// nothing to write
 		}
