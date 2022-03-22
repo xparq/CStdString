@@ -120,8 +120,11 @@ int main(int argc, char* argv[]) { argc, argv; // Silence pedantic warnings abou
 	int i = 0;
 	while (start != -1)
 	{
-		cout << resToken << " " << resExpected[i] << std::endl;
-		ASSERT(resToken == resExpected[i++]);
+		tout << resToken << ": " << resExpected[i] << std::endl;
+
+		ASSERT(resToken == resExpected[i]);
+		i++;
+
 		resToken = tokenString.Tokenize(tokens, start);
 	}
 
