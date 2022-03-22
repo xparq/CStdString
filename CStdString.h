@@ -690,6 +690,43 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 	#include <locale>			// for various facets
 #endif
 
+// strspn, strcspn
+#ifdef SS_WIN32
+	#ifdef SS_ANSI
+		#include <string.h>
+		#ifdef _UNICODE
+			#define _tcsspn wcsspn
+			#define _tcscspn wcscspn
+		//#elif defined(SS_MBCS)
+			// TODO - not sure what to do here
+		#else
+			#define _tcsspn strspn
+			#define _tcscspn strcspn
+		#endif
+	//#else
+	// we should already have _tcsspn and _tcscspn from TCHAR.H so nothing to do
+	#endif
+#else
+#include <cstring>
+#define _tcsspn strspn
+#define _tcscspn strcspn
+#endif
+
+namespace detail_
+{
+	template <typename CT>
+	int StringSpanIncluding(const CT* str, const CT* tokens)
+	{
+		return _tcscspn(str, tokens);
+	}
+
+	template <typename CT>
+	int StringSpanExcluding(const CT* str, const CT* tokens)
+	{
+		return _tcsspn(str, tokens);
+	}
+}
+
 // If this is a recent enough version of VC include comdef.h, so we can write
 // member functions to deal with COM types & compiler support classes e.g.
 // _bstr_t
@@ -3773,6 +3810,52 @@ public:
 	const CT& operator[](unsigned int nIdx) const
 	{
 		return static_cast<const MYBASE*>(this)->operator[](static_cast<MYSIZE>(nIdx));
+	}
+
+	MYTYPE Tokenize(
+		PCMYSTR pszTokens,
+		int& iStart) const
+	{
+		ASSERT(iStart >= 0);
+
+		if (iStart < 0)
+			throw std::invalid_argument("iStart must be > 0");
+
+		if (iStart >= this->GetLength())
+		{
+			iStart = -1;
+
+			return MYTYPE();
+		}
+
+		if ((pszTokens == NULL) || (*pszTokens == (CT)0))
+		{
+			return (MYTYPE(this->GetString() + iStart));
+		}
+
+		PCMYSTR pszPlace = this->GetString() + iStart;
+		PCMYSTR pszEnd = this->GetString() + this->GetLength();
+		if (pszPlace < pszEnd)
+		{
+			int nIncluding = detail_::StringSpanIncluding(pszPlace, pszTokens);
+
+			if ((pszPlace + nIncluding) < pszEnd)
+			{
+				pszPlace += nIncluding;
+				int nExcluding = detail_::StringSpanExcluding(pszPlace, pszTokens);
+
+				int iFrom = iStart + nIncluding;
+				int nUntil = nExcluding;
+				iStart = iFrom + nUntil + 1;
+
+				return(this->Mid(iFrom, nUntil));
+			}
+		}
+
+		// return empty string, done tokenizing
+		iStart = -1;
+
+		return MYTYPE();
 	}
 
 #ifndef SS_NO_IMPLICIT_CAST
