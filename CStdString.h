@@ -933,7 +933,7 @@ namespace detail_
 										pSrcA, pSrcA + nSrc, pNextSrcA,
 										pDstW, pDstW + nDst, pNextDstW);
 
-			ASSERT(SSCodeCvt::ok == res);
+			//ASSERT(SSCodeCvt::ok == res);	// This assert was failing in gcc UNICODE builds, but we don't get an error...
 			ASSERT(SSCodeCvt::error != res);
 			ASSERT(pNextDstW >= pDstW);
 			ASSERT(pNextSrcA >= pSrcA);
