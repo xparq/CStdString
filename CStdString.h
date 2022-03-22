@@ -708,8 +708,13 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 	#endif
 #else
 #include <cstring>
+#ifdef _UNICODE
+#define _tcsspn wcsspn
+#define _tcscspn wcscspn
+#else
 #define _tcsspn strspn
 #define _tcscspn strcspn
+#endif
 #endif
 
 namespace detail_
