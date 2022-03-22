@@ -4,7 +4,7 @@
 //
 //      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //      This is a "facelifted" version of Joe's original code, made compatible
-//      with C++17 compilers (by Szabolcs Sz�sz, in Aug. 2019).
+//      with C++17 compilers (by Szabolcs Szász, in Aug. 2019).
 //
 //      The latest version should be available at:
 //              https://github.com/lunakid/CStdString
@@ -62,7 +62,7 @@
 //			- Jim Cline
 //			- Jeff Kohn
 //			- Todd Heckel
-//			- Ullrich Poll�hne
+//			- Ullrich Pollähne
 //			- Joe Vitaterna
 //			- Joe Woodbury
 //			- Aaron (no last name)
@@ -216,7 +216,7 @@
 //	  2000-APR-17 - Thanks to Joe Vitaterna for pointing out that ReverseFind
 //					is supposed to be a const function.
 //
-//	  2000-MAR-07 - Thanks to Ullrich Poll�hne for catching a range bug in one
+//	  2000-MAR-07 - Thanks to Ullrich Pollähne for catching a range bug in one
 //					of the overloads of assign.
 //
 //    2000-FEB-01 - You can now use CStdString on the Mac with CodeWarrior!
