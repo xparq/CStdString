@@ -40,7 +40,13 @@ using std::cout; using std::wcout; // using ..., ...; would fail in c++14
   #endif
 #endif
 
-#ifndef _WIN32
+#ifdef _UNICODE
+#define tout wcout
+#else
+#define tout cout
+#endif
+
+#ifndef SS_WIN32
 #define OutputDebugString(x) do {} while (false)
 #include <signal.h>
 #endif
@@ -67,13 +73,13 @@ int main(int argc, char* argv[]) { argc, argv; // Silence pedantic warnings abou
 	strVal1 += ' ';
 	strVal1 += "And this is its tail.";
 	OutputDebugString(strVal1 + _T(" [plus some temp. tail only for outputting it]\n"));
-	cout <<           strVal1 + _T(" [plus some temp. tail only for outputting it]\n");
+	tout <<           strVal1 + _T(" [plus some temp. tail only for outputting it]\n");
 
 	// Some conversion functions can be chained together
 
 	strVal1.ToLower().TrimRight();
 	OutputDebugString(strVal1 + _T("\n"));
-	cout <<           strVal1 + _T("\n");
+	tout <<           strVal1 + _T("\n");
 
 	// Case INsensitive comparison via Equals() or CompareNoCase()
 
@@ -87,7 +93,7 @@ int main(int argc, char* argv[]) { argc, argv; // Silence pedantic warnings abou
 
 	strVal1.Format(_T("This is a %s string, with a num. param: %d"), _T("*FORMATTED*"), 123);
 	OutputDebugString(strVal1 + _T("\n"));
-	cout <<           strVal1 + _T("\n");
+	tout <<           strVal1 + _T("\n");
 
 	// Declare an STL map class which maps strings to integers.  The
 	// keys are case insensitive, so an integer stored under the key
@@ -99,7 +105,7 @@ int main(int argc, char* argv[]) { argc, argv; // Silence pedantic warnings abou
 	ASSERT(myMap.find(_T("mykey")) != myMap.end());
 
 	CStdString tokenString(_T("%First Second#Third"));
-	CStdString tokens(_T("% #"));
+	CStdString tokens(_T("%# "));
 
 	CStdString resExpected[3] = {
 		CStdString(_T("First")),
