@@ -719,16 +719,36 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 
 namespace detail_
 {
-	template <typename CT>
-	int StringSpanIncluding(const CT* str, const CT* tokens)
+	//template <typename CT>
+	//int StringSpanIncluding(const CT* str, const CT* tokens)
+	//{
+	//	return _tcsspn(str, tokens);
+	//}
+
+	//template <typename CT>
+	//int StringSpanExcluding(const CT* str, const CT* tokens)
+	//{
+	//	return _tcscspn(str, tokens);
+	//}
+
+	int StringSpanIncluding(const char* str, const char* tokens)
 	{
-		return _tcsspn(str, tokens);
+		return strspn(str, tokens);
 	}
 
-	template <typename CT>
-	int StringSpanExcluding(const CT* str, const CT* tokens)
+	int StringSpanExcluding(const char* str, const char* tokens)
 	{
-		return _tcscspn(str, tokens);
+		return strcspn(str, tokens);
+	}
+
+	int StringSpanIncluding(const wchar_t* str, const wchar_t* tokens)
+	{
+		return wcsspn(str, tokens);
+	}
+
+	int StringSpanExcluding(const wchar_t* str, const wchar_t* tokens)
+	{
+		return wcscspn(str, tokens);
 	}
 }
 
