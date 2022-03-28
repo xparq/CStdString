@@ -731,22 +731,22 @@ namespace detail_
 	//	return _tcscspn(str, tokens);
 	//}
 
-	int StringSpanIncluding(const char* str, const char* tokens)
+	inline int StringSpanIncluding(const char* str, const char* tokens)
 	{
 		return strspn(str, tokens);
 	}
 
-	int StringSpanExcluding(const char* str, const char* tokens)
+	inline int StringSpanExcluding(const char* str, const char* tokens)
 	{
 		return strcspn(str, tokens);
 	}
 
-	int StringSpanIncluding(const wchar_t* str, const wchar_t* tokens)
+	inline int StringSpanIncluding(const wchar_t* str, const wchar_t* tokens)
 	{
 		return wcsspn(str, tokens);
 	}
 
-	int StringSpanExcluding(const wchar_t* str, const wchar_t* tokens)
+	inline int StringSpanExcluding(const wchar_t* str, const wchar_t* tokens)
 	{
 		return wcscspn(str, tokens);
 	}
