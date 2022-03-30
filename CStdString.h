@@ -694,43 +694,15 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 #ifdef SS_WIN32
 	#ifdef SS_ANSI
 		#include <string.h>
-		#ifdef _UNICODE
-			#define _tcsspn wcsspn
-			#define _tcscspn wcscspn
-		//#elif defined(SS_MBCS)
-			// TODO - not sure what to do here
-		#else
-			#define _tcsspn strspn
-			#define _tcscspn strcspn
-		#endif
 	//#else
 	// we should already have _tcsspn and _tcscspn from TCHAR.H so nothing to do
 	#endif
 #else
 #include <cstring>
-#ifdef _UNICODE
-#define _tcsspn wcsspn
-#define _tcscspn wcscspn
-#else
-#define _tcsspn strspn
-#define _tcscspn strcspn
-#endif
 #endif
 
 namespace detail_
 {
-	//template <typename CT>
-	//int StringSpanIncluding(const CT* str, const CT* tokens)
-	//{
-	//	return _tcsspn(str, tokens);
-	//}
-
-	//template <typename CT>
-	//int StringSpanExcluding(const CT* str, const CT* tokens)
-	//{
-	//	return _tcscspn(str, tokens);
-	//}
-
 	inline int StringSpanIncluding(const char* str, const char* tokens)
 	{
 		return strspn(str, tokens);
