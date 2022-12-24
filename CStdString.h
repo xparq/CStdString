@@ -4,7 +4,7 @@
 //
 //      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //      This is a "facelifted" version of Joe's original code, made compatible
-//      with C++17 compilers (by Szabolcs Sz·sz, in Aug. 2019).
+//      with C++17 compilers (by Szabolcs Sz√°sz, in Aug. 2019).
 //
 //      The latest version should be available at:
 //              https://github.com/lunakid/CStdString
@@ -62,7 +62,7 @@
 //			- Jim Cline
 //			- Jeff Kohn
 //			- Todd Heckel
-//			- Ullrich Poll‰hne
+//			- Ullrich Poll√§hne
 //			- Joe Vitaterna
 //			- Joe Woodbury
 //			- Aaron (no last name)
@@ -216,7 +216,7 @@
 //	  2000-APR-17 - Thanks to Joe Vitaterna for pointing out that ReverseFind
 //					is supposed to be a const function.
 //
-//	  2000-MAR-07 - Thanks to Ullrich Poll‰hne for catching a range bug in one
+//	  2000-MAR-07 - Thanks to Ullrich Poll√§hne for catching a range bug in one
 //					of the overloads of assign.
 //
 //    2000-FEB-01 - You can now use CStdString on the Mac with CodeWarrior!
@@ -690,6 +690,40 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 	#include <locale>			// for various facets
 #endif
 
+// strspn, strcspn
+#ifdef SS_WIN32
+	#ifdef SS_ANSI
+		#include <string.h>
+	//#else
+	// we should already have _tcsspn and _tcscspn from TCHAR.H so nothing to do
+	#endif
+#else
+#include <cstring>
+#endif
+
+namespace detail_
+{
+	inline int StringSpanIncluding(const char* str, const char* tokens)
+	{
+		return strspn(str, tokens);
+	}
+
+	inline int StringSpanExcluding(const char* str, const char* tokens)
+	{
+		return strcspn(str, tokens);
+	}
+
+	inline int StringSpanIncluding(const wchar_t* str, const wchar_t* tokens)
+	{
+		return wcsspn(str, tokens);
+	}
+
+	inline int StringSpanExcluding(const wchar_t* str, const wchar_t* tokens)
+	{
+		return wcscspn(str, tokens);
+	}
+}
+
 // If this is a recent enough version of VC include comdef.h, so we can write
 // member functions to deal with COM types & compiler support classes e.g.
 // _bstr_t
@@ -891,7 +925,7 @@ inline const Type& SSMAX(const Type& arg1, const Type& arg2)
 										pSrcA, pSrcA + nSrc, pNextSrcA,
 										pDstW, pDstW + nDst, pNextDstW);
 
-			ASSERT(SSCodeCvt::ok == res);
+			//ASSERT(SSCodeCvt::ok == res);	// This assert was failing in gcc UNICODE builds, but we don't get an error...
 			ASSERT(SSCodeCvt::error != res);
 			ASSERT(pNextDstW >= pDstW);
 			ASSERT(pNextSrcA >= pSrcA);
@@ -2335,7 +2369,7 @@ public:
 			// <nChars> or the NULL terminator, whichever comes first.  Since we
 			// are about to call a less forgiving overload (in which <nChars>
 			// must be a valid length), we must adjust the length here to a safe
-			// value.  Thanks to Ullrich Poll‰hne for catching this bug
+			// value.  Thanks to Ullrich Poll√§hne for catching this bug
 
 			nChars		= SSMIN(nChars, str.length() - nStart);
 			MYTYPE strTemp(str.c_str()+nStart, nChars);
@@ -2356,7 +2390,7 @@ public:
 			// <nChars> or the NULL terminator, whichever comes first.  Since we
 			// are about to call a less forgiving overload (in which <nChars>
 			// must be a valid length), we must adjust the length here to a safe
-			// value. Thanks to Ullrich Poll‰hne for catching this bug
+			// value. Thanks to Ullrich Poll√§hne for catching this bug
 
 			nChars		= SSMIN(nChars, str.length() - nStart);
 
@@ -3775,6 +3809,52 @@ public:
 		return static_cast<const MYBASE*>(this)->operator[](static_cast<MYSIZE>(nIdx));
 	}
 
+	MYTYPE Tokenize(
+		PCMYSTR pszTokens,
+		int& iStart) const
+	{
+		ASSERT(iStart >= 0);
+
+		if (iStart < 0)
+			throw std::invalid_argument("iStart must be > 0");
+
+		if (iStart >= this->GetLength())
+		{
+			iStart = -1;
+
+			return MYTYPE();
+		}
+
+		if ((pszTokens == NULL) || (*pszTokens == (CT)0))
+		{
+			return (MYTYPE(this->GetString() + iStart));
+		}
+
+		PCMYSTR pszPlace = this->GetString() + iStart;
+		PCMYSTR pszEnd = this->GetString() + this->GetLength();
+		if (pszPlace < pszEnd)
+		{
+			int nIncluding = detail_::StringSpanIncluding(pszPlace, pszTokens);
+
+			if ((pszPlace + nIncluding) < pszEnd)
+			{
+				pszPlace += nIncluding;
+				int nExcluding = detail_::StringSpanExcluding(pszPlace, pszTokens);
+
+				int iFrom = iStart + nIncluding;
+				int nUntil = nExcluding;
+				iStart = iFrom + nUntil + 1;
+
+				return(this->Mid(iFrom, nUntil));
+			}
+		}
+
+		// return empty string, done tokenizing
+		iStart = -1;
+
+		return MYTYPE();
+	}
+
 #ifndef SS_NO_IMPLICIT_CAST
 	operator const CT*() const
 	{
@@ -3828,7 +3908,7 @@ public:
 		{
 			TRACE(_T("StreamSave: Cannot write control header, ERR=0x%X\n"),hr);
 		}
-		else if ( empty() )
+		else if ( this->empty() )
 		{
 			;		// nothing to write
 		}

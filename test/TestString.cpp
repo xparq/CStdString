@@ -7,8 +7,10 @@
 //! Silence MSVC's infamous _vsnprintf warning...
 //! CStdString does it anyway, but it's too late if Windows.h is included first:
 //#define _CRT_SECURE_NO_WARNINGS
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
+#endif
 
 // For testing some win32-specific features (should be tested separately!)
 // BTW, this will be automatically enabled by CStdString.h if Windows.h
@@ -16,7 +18,7 @@
 //!! In fact, defining this here seems to trigger a segfault in GCC! :-o
 //!! See: [SS_WIN32-gcc-crash]
 //#define SS_WIN32 
-#define SS_NO_LOCALE
+//#define SS_NO_LOCALE
 #include "../CStdString.h"
 
 #include <map>
@@ -33,9 +35,20 @@ using std::cout; using std::wcout; // using ..., ...; would fail in c++14
     #ifdef UNICODE
       #define _T(str) L ## str
     #else
-      #define _T(str) TEXT(str)
+      #define _T(str) str
     #endif
   #endif
+#endif
+
+#ifdef _UNICODE
+#define tout wcout
+#else
+#define tout cout
+#endif
+
+#ifndef SS_WIN32
+#define OutputDebugString(x) do {} while (false)
+#include <signal.h>
 #endif
 
 #include "resource.h"
@@ -60,13 +73,13 @@ int main(int argc, char* argv[]) { argc, argv; // Silence pedantic warnings abou
 	strVal1 += ' ';
 	strVal1 += "And this is its tail.";
 	OutputDebugString(strVal1 + _T(" [plus some temp. tail only for outputting it]\n"));
-	cout <<           strVal1 + _T(" [plus some temp. tail only for outputting it]\n");
+	tout <<           strVal1 + _T(" [plus some temp. tail only for outputting it]\n");
 
 	// Some conversion functions can be chained together
 
 	strVal1.ToLower().TrimRight();
 	OutputDebugString(strVal1 + _T("\n"));
-	cout <<           strVal1 + _T("\n");
+	tout <<           strVal1 + _T("\n");
 
 	// Case INsensitive comparison via Equals() or CompareNoCase()
 
@@ -80,7 +93,7 @@ int main(int argc, char* argv[]) { argc, argv; // Silence pedantic warnings abou
 
 	strVal1.Format(_T("This is a %s string, with a num. param: %d"), _T("*FORMATTED*"), 123);
 	OutputDebugString(strVal1 + _T("\n"));
-	cout <<           strVal1 + _T("\n");
+	tout <<           strVal1 + _T("\n");
 
 	// Declare an STL map class which maps strings to integers.  The
 	// keys are case insensitive, so an integer stored under the key
@@ -91,6 +104,29 @@ int main(int argc, char* argv[]) { argc, argv; // Silence pedantic warnings abou
 	myMap[_T("MYKEY")] = 7;
 	ASSERT(myMap.find(_T("mykey")) != myMap.end());
 
+	CStdString tokenString(_T("%First Second#Third"));
+	CStdString tokens(_T("%# "));
+
+	CStdString resExpected[3] = {
+		CStdString(_T("First")),
+		CStdString(_T("Second")),
+		CStdString(_T("Third"))
+	};
+
+	int start = 0;
+	CStdString resToken = tokenString.Tokenize(tokens, start);
+	ASSERT(start >= 0);
+
+	int i = 0;
+	while (start != -1)
+	{
+		tout << resToken << ": " << resExpected[i] << std::endl;
+
+		ASSERT(resToken == resExpected[i]);
+		i++;
+
+		resToken = tokenString.Tokenize(tokens, start);
+	}
 
 #ifdef SS_WIN32
 	// If we were calling some windows function that fills out a
